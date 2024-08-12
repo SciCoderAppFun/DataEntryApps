@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Table with Specific Columns</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        input[type="text"], input[type="date"] {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <button type="button" onclick="addRows(2)">Add 1 Visium Slide</button>
+
+    <table id="dynamicTable">
+        <thead>
+            <tr>
+                <th>Date Slide Delivered to SCAF</th>
+                <th>Slide</th>
+                <th>ROI Name (max 10 characters)</th>
+                <th>ID on Original Slide (if different)</th>
+                <th>What species did this tissue originate from?</th>
+                <th>What is the tissue type for this slide?</th>
+                <th>Date tissue originally isolated and how was it stored?</th>
+                <th>Date tissue was embedded and how was it stored?</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be dynamically generated here -->
+        </tbody>
+    </table>
+
+    <script>
+        let visiumSlideNumber = 1;
+
+        function addRows(numberOfRows) {
+            const tableBody = document.getElementById('dynamicTable').getElementsByTagName('tbody')[0];
+
+            for (let i = 0; i < numberOfRows; i++) {
+                let row = tableBody.insertRow();
+
+                // Date Slide Delivered to SCAF
+                let dateCell = row.insertCell(0);
+                let dateInput = document.createElement('input');
+                dateInput.type = 'date';
+                dateInput.name = 'date' + (tableBody.rows.length);
+                dateCell.appendChild(dateInput);
+
+                // Slide (auto-generated)
+                let slideCell = row.insertCell(1);
+                let slideValue = i % 2 === 0 ? `Visium Slide ${visiumSlideNumber} Tissue Slide 1` : `Visium Slide ${visiumSlideNumber} Tissue Slide 2`;
+                if (i % 2 !== 0) visiumSlideNumber++;
+                slideCell.innerHTML = slideValue;
+
+                // ROI Name (max 10 characters)
+                let roiNameCell = row.insertCell(2);
+                let roiNameInput = document.createElement('input');
+                roiNameInput.type = 'text';
+                roiNameInput.name = 'roiName' + (tableBody.rows.length);
+                roiNameInput.maxLength = 10;
+                roiNameCell.appendChild(roiNameInput);
+
+                // ID on Original Slide (if different)
+                let idCell = row.insertCell(3);
+                let idInput = document.createElement('input');
+                idInput.type = 'text';
+                idInput.name = 'idOriginalSlide' + (tableBody.rows.length);
+                idCell.appendChild(idInput);
+
+                // What species did this tissue originate from?
+                let speciesCell = row.insertCell(4);
+                let speciesInput = document.createElement('input');
+                speciesInput.type = 'text';
+                speciesInput.name = 'species' + (tableBody.rows.length);
+                speciesCell.appendChild(speciesInput);
+
+                // What is the tissue type for this slide?
+                let tissueTypeCell = row.insertCell(5);
+                let tissueTypeInput = document.createElement('input');
+                tissueTypeInput.type = 'text';
+                tissueTypeInput.name = 'tissueType' + (tableBody.rows.length);
+                tissueTypeCell.appendChild(tissueTypeInput);
+
+                // Date tissue originally isolated and how was it stored?
+                let tissueIsolatedCell = row.insertCell(6);
+                let tissueIsolatedDateInput = document.createElement('input');
+                tissueIsolatedDateInput.type = 'date';
+                tissueIsolatedDateInput.name = 'tissueIsolatedDate' + (tableBody.rows.length);
+                tissueIsolatedCell.appendChild(tissueIsolatedDateInput);
+
+                let tissueIsolatedTextInput = document.createElement('input');
+                tissueIsolatedTextInput.type = 'text';
+                tissueIsolatedTextInput.name = 'tissueIsolatedText' + (tableBody.rows.length);
+                tissueIsolatedCell.appendChild(tissueIsolatedTextInput);
+
+                // Date tissue was embedded and how was it stored?
+                let tissueEmbeddedCell = row.insertCell(7);
+                let tissueEmbeddedDateInput = document.createElement('input');
+                tissueEmbeddedDateInput.type = 'date';
+                tissueEmbeddedDateInput.name = 'tissueEmbeddedDate' + (tableBody.rows.length);
+                tissueEmbeddedCell.appendChild(tissueEmbeddedDateInput);
+
+                let tissueEmbeddedTextInput = document.createElement('input');
+                tissueEmbeddedTextInput.type = 'text';
+                tissueEmbeddedTextInput.name = 'tissueEmbeddedText' + (tableBody.rows.length);
+                tissueEmbeddedCell.appendChild(tissueEmbeddedTextInput);
+            }
+        }
+
+        // Initialize with 2 rows
+        addRows(2);
+    </script>
+</body>
+</html>
