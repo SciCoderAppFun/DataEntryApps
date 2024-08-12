@@ -71,11 +71,14 @@
 
         function addRows() {
             const tbody = document.querySelector('#dynamicTable tbody');
-            tbody.innerHTML += createRow(slideCounter, 1);
-            tbody.innerHTML += createRow(slideCounter, 2);
-            slideCounter++;
-            sendHeight();
-        }
+
+            // Append new rows instead of replacing the entire tbody content
+            tbody.insertAdjacentHTML('beforeend', createRow(slideCounter, 1));
+            tbody.insertAdjacentHTML('beforeend', createRow(slideCounter, 2));
+
+    slideCounter++;
+    sendHeight();
+}
 
         function syncData() {
             const formData = new FormData(document.getElementById('dynamicForm'));
