@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab App</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>Section 1: Input Fields</h2>
+    <label for="captureDate">Capture Date:</label>
+    <input type="date" id="captureDate"><br><br>
+
+    <label for="species">Species:</label>
+    <input type="text" id="species"><br><br>
+
+    <label for="pi">PI:</label>
+    <input type="text" id="pi"><br><br>
+
+    <label for="poc">POC:</label>
+    <input type="text" id="poc"><br><br>
+
+    <label for="cs_number">CS Number:</label>
+    <input type="text" id="cs_number"><br><br>
+
+    <h3>Information from POC - Estimate</h3>
+    <table id="pocTable">
+        <thead>
+            <tr>
+                <th>Sample Name</th>
+                <th>Volume</th>
+                <th>Concentration (cells/mL)</th>
+                <th>Viability</th>
+                <th>Fewer than 30K?</th>
+                <th>Run Blind?</th>
+                <th>Special Notes from POC</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- The first row will be generated dynamically -->
+        </tbody>
+    </table>
+
+    <button onclick="addRow('pocTable')">Add Row</button>
+    <button onclick="removeRow('pocTable')">Remove Row</button><br><br>
+
+    <button onclick="submitToSCAF()">Submit Information to SCAF</button>
+    <button id="scafButton" class="hidden" onclick="showSCAFSection()">For SCAF - Sample Processing</button>
+
+    <div id="scafSection" class="hidden">
+        <h3>Sample Processing</h3>
+        <h4>Optional - Only fill out if you perfromed any processing (RBC lysis, DCR, washes) before performing the final counts</h4>
+        <table id="sampleProcessingTable">
+            <thead>
+                <tr>
+                    <th>Sample Name</th>
+                    <th>Pre-Counting Processing</th>
+                    <th>Sample Volume (uL)</th>
+                    <th>Total Concentration (cells/mL)</th>
+                    <th>Live Concentration (cells/mL)</th>
+                    <th>Viability</th>
+                    <th>Additional Processing</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <button onclick="addRow('sampleProcessingTable')">Add Row</button>
+        <button onclick="removeRow('sampleProcessingTable')">Remove Row</button>
+
+        <h3>Lane Processing</h3>
+        <table id="laneProcessingTable">
+            <thead>
+                <tr>
+                    <th>SamplesInLane</th>
+                    <th>Updated Sample Name</th>
+                    <th>Final Sample Volume (uL)</th>
+                    <th>Count 1: Total Concentration (cells/mL)</th>
+                    <th>Count 1: Live Concentration (cells/mL)</th>
+                    <th>Count 1: Viability</th>
+                    <th>Count 2: Total Concentration (cells/mL)</th>
+                    <th>Count 2: Live Concentration (cells/mL)</th>
+                    <th>Count 2: Viability</th>
+                    <th>Count 3: Total Concentration (cells/mL)</th>
+                    <th>Count 3: Live Concentration (cells/mL)</th>
+                    <th>Count 3: Viability</th>
+                    <th>Sample Notes</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <button onclick="addRow('laneProcessingTable')">Add Row</button>
+        <button onclick="removeRow('laneProcessingTable')">Remove Row</button><br><br>
+
+        <button id="ChipButton" onclick="createChipTable(chipCounter)">Perform First Capture</button>
+        <div id="chipContainer" ></div>
+    </div>
+
+    <script>
+        const pocTableBody = document.querySelector("#pocTable tbody");
+        const sampleProcessingTableBody = document.querySelector("#sampleProcessingTable tbody");
+        const laneProcessingTableBody = document.querySelector("#laneProcessingTable tbody");
+
+        let chipCounter = 1;
+        //let chipCounter = 1;
+
+        function initializePOCTable() {
+            pocTableBody.innerHTML = "";
+            addRow('pocTable'); // Add one row by default
+        }
+
+        function submitToSCAF() {
+            const numRows = pocTableBody.rows.length;
+            sampleProcessingTableBody.innerHTML = "";
+            laneProcessingTableBody.innerHTML = "";  
+
+            for (let i = 0; i < numRows; i++) {
+                const pocSampleName = pocTableBody.rows[i].cells[0].querySelector("input").value;
+
+                const sampleProcessingRow = document.createElement("tr");
+                sampleProcessingRow.innerHTML = `
+                    <td><input type="text" value="${pocSampleName}"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                `;
+                sampleProcessingTableBody.appendChild(sampleProcessingRow);
+
+                const laneProcessingRow = document.createElement("tr");
+                laneProcessingRow.innerHTML = `
+                    <td>
+                        <select multiple onchange="updateSampleName(this)">
+                            ${generatePOCOptions()}
+                        </select>
+                    </td>
+                    <td><input type="text" readonly></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                    <td><input type="text"></td>
+                `;
+                laneProcessingTableBody.appendChild(laneProcessingRow);
+            }
+
+            // Generate the first Chip table after Lane Processing is populated
+            //createChipTable(chipCounter);
+            document.getElementById("scafButton").classList.remove("hidden"); // Show SCAF button
+        }
+
+        function generatePOCOptions() {
+            let options = "";
+            for (let i = 0; i < pocTableBody.rows.length; i++) {
+                const optionValue = pocTableBody.rows[i].cells[0].querySelector("input").value;
+                options += `<option value="${optionValue}">${optionValue}</option>`;
+            }
+            return options;
+        }
+
+        function updateSampleName(selectElement) {
+            const selectedOptions = Array.from(selectElement.selectedOptions).map(option => option.value);
+            const updatedSampleName = selectedOptions.join("_");
+            selectElement.closest("tr").querySelector("td:nth-child(2) input").value = updatedSampleName;
+        }
+
+        function createChipTable(chipNumber) {
+            const chipSection = document.createElement("div");
+            chipSection.id = `chip${chipNumber}Section`;
+
+            const title = document.createElement("h3");
+            title.innerText = `Chip ${chipNumber}`;
+            chipSection.appendChild(title);
+
+            const table = document.createElement("table");
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Lane ID</th>
+                        <th>Sample Name</th>
+                        <th>Cell Number to Target</th>
+                        <th>Loading Concentration</th>
+                        <th>Average Total Concentration</th>
+                        <th>Average Viability</th>
+                        <th>Did the lane clog?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${createChipRows(chipNumber)}
+                </tbody>
+            `;
+            chipSection.appendChild(table);
+
+            // Create the buttons
+            const performAnotherCaptureButton = document.createElement("button");
+            performAnotherCaptureButton.innerText = "Perform Another Capture";
+            performAnotherCaptureButton.onclick = function() {
+                chipCounter++;
+                createChipTable(chipCounter);
+            };
+
+            const completeCaptureButton = document.createElement("button");
+            completeCaptureButton.innerText = "Complete Captures for the Day";
+            completeCaptureButton.onclick = function() {
+                alert(`Congrats on your captures!!`);
+            };
+
+            chipSection.appendChild(performAnotherCaptureButton);
+            chipSection.appendChild(completeCaptureButton);
+
+            document.getElementById("chipContainer").appendChild(chipSection);
+        }
+
+        function generateLaneOptions() {
+            let options = '<option value="None">None</option>';
+            for (let i = 0; i < laneProcessingTableBody.rows.length; i++) {
+                const UpdatedNames = laneProcessingTableBody.rows[i].cells[1].querySelector("input").value;
+                if (UpdatedNames.trim !== "") {
+                    options += `<option value="${UpdatedNames}">${UpdatedNames}</option>`;
+                }
+            }
+            return options;
+        }
+
+
+        function addRow(tableId) {
+            const tableBody = document.querySelector(`#${tableId} tbody`);
+            const row = document.createElement("tr");
+            switch (tableId) {
+                case 'pocTable':
+                    row.innerHTML = `
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="checkbox"></td>
+                        <td><input type="checkbox"></td>
+                        <td><input type="text"></td>
+                    `;
+                    break;
+                case 'sampleProcessingTable':
+                    row.innerHTML = `
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                    `;
+                    break;
+                case 'laneProcessingTable':
+                    row.innerHTML = `
+                        <td>
+                            <select multiple onchange="updateSampleName(this)">
+                                <option value="None">None</option>
+                                ${generatePOCOptions()}
+                            </select>
+                        </td>
+                        <td><input type="text" readonly></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                    `;
+                    break;
+            }
+            tableBody.appendChild(row);
+        }
+
+        function removeRow(tableId) {
+            const tableBody = document.querySelector(`#${tableId} tbody`);
+            if (tableBody.rows.length > 1) {
+                tableBody.deleteRow(tableBody.rows.length - 1);
+            }
+        }
+        
+        function createChipRows(chipNumber) {
+            let rows = "";
+            for (let i = 0; i < 8; i++) {
+                rows += `
+                    <tr>
+                        <td>Chip ${chipNumber} Lane ${i + 1}</td> <!-- this will read "Chip # lane #"  -->
+                        <td>
+                            <select>
+                                ${generateLaneOptions()}
+                            </select>
+                        </td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td><input type="text"></td>
+                        <td>
+                            <label><input type="checkbox" value="true"> yes</label>
+                            <label><input type="checkbox" value="true"> recaptured</label>
+                        </td>
+                    </tr>
+                `;
+            }
+            return rows;
+        }
+        function showSCAFSection() {
+            document.getElementById("scafSection").classList.remove("hidden");
+        }
+
+        function showchipContainer() {
+            document.getElementById("chipContainer").classList.remove("hidden");
+        }
+
+        // Initialize the POC table with one row
+        initializePOCTable();
+    </script>
+</body>
+</html>
